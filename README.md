@@ -12,6 +12,12 @@ Un'applicazione desktop per il monitoraggio dei prezzi di immobili da diverse so
 - Importazione di URL da file Excel o testo
 - Possibilità di importare più URL contemporaneamente
 - Esportazione dei dati in formato Excel
+- Estrazione intelligente dei prezzi con algoritmi avanzati
+- Rilevamento automatico delle immagini principali degli immobili
+- Supporto per la containerizzazione con Docker
+- Calcolo automatico delle variazioni di prezzo
+- Rilevamento della superficie dell'immobile
+- Supporto per l'installazione tramite script automatico
 
 ## Requisiti
 
@@ -57,6 +63,17 @@ python main.py
 - **Rating**: Assegna un rating personale agli immobili (mi piace, neutro, non mi piace)
 - **Note**: Aggiungi note personali per ogni immobile
 - **Prezzo alternativo**: Registra un prezzo alternativo se quello rilevato automaticamente non è corretto
+- **Estrazione prezzo**: Sistema avanzato di riconoscimento dei prezzi dagli annunci web
+- **Preview immagini**: Visualizzazione diretta delle immagini dell'immobile
+
+## Esecuzione con Docker
+
+Per avviare l'applicazione in un container Docker:
+
+```bash
+docker build -t price-tracker .
+docker run -v ./data:/app/data price-tracker
+```
 
 ## Creazione dell'eseguibile
 
