@@ -6,6 +6,7 @@ import sys
 import subprocess
 import platform
 import shutil
+import PyInstaller.__main__
 
 def check_python():
     """Verifica che Python sia installato e nella versione corretta"""
@@ -35,72 +36,38 @@ def install_requirements():
         return False
 
 def create_executable():
-    """Crea l'eseguibile usando PyInstaller"""
-    print("\nCreazione dell'eseguibile...")
-    try:
-        # Determina il separatore corretto per --add-data in base al sistema operativo
-        # Su Windows è ";" mentre su Unix è ":"
-        separator = ";" if platform.system() == "Windows" else ":"
-        
-        # Assicurati che il percorso src esista
-        if not os.path.exists("src"):
-            print("✗ La directory 'src' non esiste")
-            return False
-            
-        # Opzione per l'icona, se esiste
-        icon_option = []
-        if os.path.exists("src/icon.ico"):
-            icon_option = ["--icon=src/icon.ico"]
-            
-        # Comando PyInstaller
-        cmd = [
-            sys.executable, "-m", "PyInstaller",
-            "--name=PriceTracker",
-            "--onefile",
-            "--windowed",  # Senza console
-            f"--add-data=src{separator}src"  # Formato corretto per Windows (;) o Unix (:)
-        ]
-        
-        # Aggiungi la cartella data se esiste
-        data_dir = os.path.join("src", "data")
-        if os.path.exists(data_dir):
-            # Includi la directory dei dati
-            cmd.append(f"--add-data={data_dir}{separator}data")
-            print("✓ Directory 'data' trovata e verrà inclusa nell'eseguibile")
-        else:
-            print("! Directory 'data' non trovata. I dati verranno creati nella stessa cartella dell'eseguibile.")
-        
-        # Aggiungi l'opzione dell'icona se esiste
-        if icon_option:
-            cmd.extend(icon_option)
-            
-        # Aggiungi il file principale
-        cmd.append("src/main.py")
-        
-        # Esegui il comando
-        subprocess.check_call(cmd)
-        
-        # Copia la directory dei dati nella cartella dist se esiste
-        if os.path.exists(data_dir):
-            dist_data_dir = os.path.join("dist", "data")
-            if not os.path.exists(dist_data_dir):
-                os.makedirs(dist_data_dir)
-            
-            # Copia i files dalla directory dei dati
-            for file in os.listdir(data_dir):
-                src_file = os.path.join(data_dir, file)
-                dst_file = os.path.join(dist_data_dir, file)
-                if os.path.isfile(src_file):
-                    shutil.copy2(src_file, dst_file)
-                    print(f"✓ File '{file}' copiato nella directory 'dist/data'")
-        
-        print("✓ Eseguibile creato con successo!")
-        print("\nPuoi trovare l'eseguibile nella cartella 'dist'")
-        print("NOTA: I tuoi dati verranno salvati nella cartella 'data' nella stessa directory dell'eseguibile.")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"✗ Errore durante la creazione dell'eseguibile: {e}")
-        return False
+    """Crea l'eseguibile dell'applicazione"""
+    # Percorsi delle directory
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    dist_dir = os.path.join(src_dir, "dist")
+    data_dir = os.path.join(dist_dir, "data")
+    icon_path = os.path.join(src_dir, "src", "assets", "icon.ico")
+    
+    # Assicurati che la directory dist esista
+    os.makedirs(dist_dir, exist_ok=True)
+    
+    # Crea la directory data se non esiste
+    os.makedirs(data_dir, exist_ok=True)
+    
+    # Opzioni per PyInstaller
+    options = [
+        "src/PriceTracker.py",  # Percorso corretto del file principale
+        "--name=PriceTracker",
+        "--onefile",
+        "--windowed",
+        "--add-data=dist/data;data",  # Usa la cartella data da dist
+        "--clean"
+    ]
+    
+    # Aggiungi l'icona solo se esiste
+    if os.path.exists(icon_path):
+        options.append(f"--icon={icon_path}")
+    
+    # Esegui PyInstaller
+    PyInstaller.__main__.run(options)
+    
+    print("\nEseguibile creato con successo!")
+    print(f"I dati verranno salvati nella cartella 'data' accanto all'eseguibile.")
 
 def main():
     """Funzione principale"""

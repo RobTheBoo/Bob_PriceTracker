@@ -18,6 +18,9 @@ Un'applicazione desktop per il monitoraggio dei prezzi di immobili da diverse so
 - Calcolo automatico delle variazioni di prezzo
 - Rilevamento della superficie dell'immobile
 - Supporto per l'installazione tramite script automatico
+- Visualizzazione colorata per sito di provenienza
+- Ordinamento delle colonne per facilitare la ricerca
+- Gestione automatica dei dati nella cartella dell'eseguibile
 
 ## Requisiti
 
@@ -65,6 +68,8 @@ python main.py
 - **Prezzo alternativo**: Registra un prezzo alternativo se quello rilevato automaticamente non è corretto
 - **Estrazione prezzo**: Sistema avanzato di riconoscimento dei prezzi dagli annunci web
 - **Preview immagini**: Visualizzazione diretta delle immagini dell'immobile
+- **Ordinamento**: Clicca sulle intestazioni delle colonne per ordinare i dati
+- **Colori per sito**: Ogni sito ha un colore di sfondo e un'icona distintiva
 
 ## Esecuzione con Docker
 
@@ -100,9 +105,16 @@ python setup.py
 
 3. L'eseguibile sarà creato nella cartella `dist`
 
+## Gestione dei dati
+
+I dati vengono salvati automaticamente nella cartella `data` accanto all'eseguibile. Questo garantisce che:
+- I dati persistano tra le esecuzioni dell'applicazione
+- I dati siano facilmente accessibili e backupabili
+- Non sia necessario eseguire migrazioni manuali dei dati
+
 ## Privacy
 
-Nessun dato personale viene condiviso. Tutti i dati sono memorizzati localmente nel file `properties.json`.
+Nessun dato personale viene condiviso. Tutti i dati sono memorizzati localmente nel file `properties.json` nella cartella `data`.
 
 ## Contribuire
 

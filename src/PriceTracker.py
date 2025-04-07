@@ -217,9 +217,17 @@ class PriceTracker:
                     visible_text = soup.get_text()
                     price = extract_price(visible_text)
                 
+                # Aggiorna sempre l'orario di ultimo aggiornamento
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
                 # Se il prezzo è cambiato, registra il nuovo punto
-                if price > 0 and price != prop.price:
-                    prop.add_price_point(price)
+                if price > 0:
+                    if price != prop.price:
+                        prop.add_price_point(price, current_time)
+                    else:
+                        # Se il prezzo non è cambiato, aggiorna solo l'orario dell'ultimo punto
+                        if prop.price_history:
+                            prop.price_history[-1]["date"] = current_time
                     self.save_properties()
                     logger.info(f"Aggiornato prezzo per {prop.title}: {price}€")
                 
@@ -364,17 +372,18 @@ class PriceTrackerApp:
         self.properties_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
         # Creare il treeview per la lista delle proprietà
-        self.columns = ("title", "price", "change", "rating", "alt_price", "last_update", "image")
+        self.columns = ("site", "title", "price", "change", "rating", "alt_price", "last_update", "image")
         self.tree = ttk.Treeview(self.properties_frame, columns=self.columns, show="headings")
         
         # Configurare le colonne
+        self.tree.heading("site", text="Sito")
         self.tree.heading("title", text="Titolo")
         self.tree.heading("price", text="Prezzo")
         self.tree.heading("change", text="Variazione")
         self.tree.heading("rating", text="Gradimento")
         self.tree.heading("alt_price", text="Prezzo Alt.")
         self.tree.heading("last_update", text="Ultimo Aggiornamento")
-        self.tree.heading("image", text="Azioni")  # Cambiato da "URL" a "Azioni"
+        self.tree.heading("image", text="Azioni")
         
         # Configurare l'aspetto delle colonne
         style = ttk.Style()
@@ -391,13 +400,26 @@ class PriceTrackerApp:
         self.tree.tag_configure("even_row", background="#FFFFFF")
         self.tree.tag_configure("odd_row", background="#F9F9F9")
         
-        self.tree.column("title", width=350)  # Allargata per mostrare titoli più lunghi
+        # Colori per i siti
+        self.tree.tag_configure("idealista", background="#E8F5E9")  # Verde chiaro
+        self.tree.tag_configure("immobiliare", background="#E3F2FD")  # Blu chiaro
+        self.tree.tag_configure("casa", background="#FFF3E0")  # Arancione chiaro
+        self.tree.tag_configure("subito", background="#F3E5F5")  # Viola chiaro
+        self.tree.tag_configure("tecnocasa", background="#F5F5F5")  # Grigio chiaro
+        
+        # Configurare le larghezze delle colonne
+        self.tree.column("site", width=50, anchor="center")
+        self.tree.column("title", width=350)
         self.tree.column("price", width=80)
         self.tree.column("change", width=100)
         self.tree.column("rating", width=80)
         self.tree.column("alt_price", width=80)
         self.tree.column("last_update", width=150)
-        self.tree.column("image", width=70, anchor="center")  # Allargata per mostrare più azioni
+        self.tree.column("image", width=70, anchor="center")
+        
+        # Aggiungere il binding per l'ordinamento
+        for col in self.columns:
+            self.tree.heading(col, command=lambda c=col: self.treeview_sort_column(c, False))
         
         # Aggiungere una scrollbar
         self.scrollbar = tk.Scrollbar(self.properties_frame, orient=tk.VERTICAL, command=self.tree.yview)
@@ -931,8 +953,15 @@ class PriceTrackerApp:
             # Icone per le azioni: una per vedere il tooltip e una per aprire
             action_icons = "🔍 🌐"  # Lente e globo per vedere e aprire
             
+            # Ottieni l'icona del sito
+            site_icon = self.get_site_icon(prop.url)
+            
+            # Ottieni il tag del sito
+            site_tag = self.get_site_tag(prop.url)
+            
             # Aggiungi alla lista
             item_id = self.tree.insert("", tk.END, values=(
+                site_icon,
                 prop.title,
                 f"{prop.price:,d}€".replace(",", "."),
                 change_text,
@@ -942,9 +971,8 @@ class PriceTrackerApp:
                 action_icons
             ))
             
-            # Applica tag per stile titolo come link e righe alternate
-            row_tag = "even_row" if i % 2 == 0 else "odd_row"
-            self.tree.item(item_id, tags=(row_tag, "link"))
+            # Applica tag per stile titolo come link e colore del sito
+            self.tree.item(item_id, tags=("link", site_tag))
         
         # Aggiorna il conteggio
         self.count_label.config(text=f"Immobili: {len(self.tracker.properties)}")
@@ -1861,6 +1889,63 @@ class PriceTrackerApp:
         
         except Exception as e:
             logger.error(f"Errore nel mostrare l'anteprima URL: {e}")
+
+    def get_site_icon(self, url):
+        """Restituisce l'icona del sito basata sull'URL"""
+        if "idealista" in url:
+            return "🟢"  # Verde come Idealista
+        elif "immobiliare" in url:
+            return "🔵"  # Blu come Immobiliare
+        elif "casa.it" in url:
+            return "🟠"  # Arancione come Casa.it
+        elif "subito" in url:
+            return "🟣"  # Viola come Subito
+        elif "tecnocasa" in url:
+            return "⚪"  # Grigio come Tecnocasa
+        else:
+            return "🏠"  # Default
+
+    def get_site_tag(self, url):
+        """Restituisce il tag del sito basato sull'URL"""
+        if "idealista" in url:
+            return "idealista"
+        elif "immobiliare" in url:
+            return "immobiliare"
+        elif "casa.it" in url:
+            return "casa"
+        elif "subito" in url:
+            return "subito"
+        elif "tecnocasa" in url:
+            return "tecnocasa"
+        else:
+            return ""
+
+    def treeview_sort_column(self, col, reverse):
+        """Funzione per ordinare le colonne del treeview"""
+        # Ottieni tutti gli elementi
+        items = [(self.tree.set(item, col), item) for item in self.tree.get_children('')]
+        
+        # Determina il tipo di ordinamento
+        if col == "price" or col == "alt_price":
+            # Ordina per numeri (rimuovi € e punti)
+            items.sort(key=lambda x: float(x[0].replace('€', '').replace('.', '').replace(',', '.')) if x[0] else 0, reverse=reverse)
+        elif col == "change":
+            # Ordina per variazione percentuale
+            items.sort(key=lambda x: float(x[0].split('(')[-1].replace('%)', '')) if x[0] and '(' in x[0] else 0, reverse=reverse)
+        elif col == "rating":
+            # Ordina per rating (usa l'indice dell'opzione)
+            rating_order = {"Non valutato": 0, "Non mi piace": 1, "Neutro": 2, "Mi piace": 3}
+            items.sort(key=lambda x: rating_order.get(x[0], 0), reverse=reverse)
+        else:
+            # Ordina per testo
+            items.sort(reverse=reverse)
+        
+        # Ricostruisci l'ordine
+        for index, (val, item) in enumerate(items):
+            self.tree.move(item, '', index)
+        
+        # Inverti l'ordine per il prossimo click
+        self.tree.heading(col, command=lambda: self.treeview_sort_column(col, not reverse))
 
 class TextHandler(logging.Handler):
     """Handler che reindirizza i log a un widget di testo"""

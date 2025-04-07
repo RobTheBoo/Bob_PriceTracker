@@ -316,9 +316,6 @@
    'C:\\Users\\Roberto '
    'Ercole\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\PIL\\features.py',
    'PYMODULE'),
-  ('PriceTracker',
-   'C:\\Users\\Roberto Ercole\\Desktop\\Bob_PriceTracker\\src\\PriceTracker.py',
-   'PYMODULE'),
   ('__future__',
    'C:\\Program '
    'Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\\Lib\\__future__.py',

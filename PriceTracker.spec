@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['src\\main.py'],
+    ['src\\PriceTracker.py'],
     pathex=[],
     binaries=[],
-    datas=[('src', 'src'), ('src\\data', 'data')],
+    datas=[('dist/data', 'data')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
