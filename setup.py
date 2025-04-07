@@ -5,6 +5,7 @@ import os
 import sys
 import subprocess
 import platform
+import shutil
 
 def check_python():
     """Verifica che Python sia installato e nella versione corretta"""
@@ -60,6 +61,15 @@ def create_executable():
             f"--add-data=src{separator}src"  # Formato corretto per Windows (;) o Unix (:)
         ]
         
+        # Aggiungi la cartella data se esiste
+        data_dir = os.path.join("src", "data")
+        if os.path.exists(data_dir):
+            # Includi la directory dei dati
+            cmd.append(f"--add-data={data_dir}{separator}data")
+            print("✓ Directory 'data' trovata e verrà inclusa nell'eseguibile")
+        else:
+            print("! Directory 'data' non trovata. I dati verranno creati nella stessa cartella dell'eseguibile.")
+        
         # Aggiungi l'opzione dell'icona se esiste
         if icon_option:
             cmd.extend(icon_option)
@@ -70,8 +80,23 @@ def create_executable():
         # Esegui il comando
         subprocess.check_call(cmd)
         
+        # Copia la directory dei dati nella cartella dist se esiste
+        if os.path.exists(data_dir):
+            dist_data_dir = os.path.join("dist", "data")
+            if not os.path.exists(dist_data_dir):
+                os.makedirs(dist_data_dir)
+            
+            # Copia i files dalla directory dei dati
+            for file in os.listdir(data_dir):
+                src_file = os.path.join(data_dir, file)
+                dst_file = os.path.join(dist_data_dir, file)
+                if os.path.isfile(src_file):
+                    shutil.copy2(src_file, dst_file)
+                    print(f"✓ File '{file}' copiato nella directory 'dist/data'")
+        
         print("✓ Eseguibile creato con successo!")
         print("\nPuoi trovare l'eseguibile nella cartella 'dist'")
+        print("NOTA: I tuoi dati verranno salvati nella cartella 'data' nella stessa directory dell'eseguibile.")
         return True
     except subprocess.CalledProcessError as e:
         print(f"✗ Errore durante la creazione dell'eseguibile: {e}")

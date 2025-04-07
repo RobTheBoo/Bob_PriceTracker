@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageTk, ImageDraw
 from io import BytesIO
 import pandas as pd  # Aggiungi pandas per il supporto Excel
+import sys
 
 # Importa il modulo di estrazione prezzi
 from extract_price import extract_price, extract_price_from_html
@@ -23,10 +24,23 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger("price_tracker")
 
 # Directory per i dati
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-os.makedirs(DATA_DIR, exist_ok=True)
+def get_data_dir():
+    """Ottiene il percorso della directory dei dati, funziona sia con Python che con l'eseguibile PyInstaller"""
+    if getattr(sys, 'frozen', False):
+        # Se l'applicazione è "frozen" (eseguibile PyInstaller)
+        # Usa la directory dell'eseguibile
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        # Altrimenti usa la directory del file sorgente
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Crea la directory dei dati nella stessa posizione dell'eseguibile o del file sorgente
+    data_dir = os.path.join(base_dir, "data")
+    os.makedirs(data_dir, exist_ok=True)
+    return data_dir
 
+# Usa la funzione per ottenere la directory dei dati
+DATA_DIR = get_data_dir()
 # File di configurazione
 PROPERTIES_FILE = os.path.join(DATA_DIR, "properties.json")
 
